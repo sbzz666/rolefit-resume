@@ -31,6 +31,7 @@ async function currentKey(temporaryKey = "") {
 
 async function fetchModels(key) {
   const response = await fetch("https://api.deepseek.com/models", {
+    signal: AbortSignal.timeout(30000),
     headers: { Authorization: `Bearer ${key}` }
   });
   const payload = await response.json().catch(() => ({}));
@@ -40,6 +41,7 @@ async function fetchModels(key) {
 
 async function generateWithDeepSeek(input, key, model) {
   const response = await fetch("https://api.deepseek.com/chat/completions", {
+    signal: AbortSignal.timeout(120000),
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify({
@@ -70,7 +72,17 @@ function registerIpc() {
   ipcMain.handle("desktop:test-connection", async (_event, input = {}) => {
     const key = await currentKey(input.key);
     if (!key) throw new Error("请先填写 DeepSeek API Key");
-    return { models: await fetchModels(key) };
+    const models = await fetchModels(key);
+    const model = typeof input.model === 'string' && input.model.trim() ? input.model.trim() : defaultModel;
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST', signal: AbortSignal.timeout(45000),
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+      body: JSON.stringify({model, messages:[{role:'user',content:'Reply with OK only.'}], max_tokens:16, thinking:{type:'disabled'}})
+    });
+    const payload = await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(payload?.error?.message || `模型调用失败（${response.status}）`);
+    if(!payload?.choices?.[0]?.message?.content) throw new Error('模型没有返回正文，请换用其他模型再测试');
+    return { models, model, verified: true };
   });
 
   ipcMain.handle("desktop:save-config", async (_event, input = {}) => {

@@ -5,4 +5,5 @@ for (const file of files) {
   if (!value.trim()) throw new Error(`${file} is empty`);
 }
 console.log(`Checked ${files.length} site files.`);
+await readFile(new URL('../dist/settings.css', import.meta.url), 'utf8');
 

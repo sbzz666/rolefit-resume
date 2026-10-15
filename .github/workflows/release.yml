@@ -1,4 +1,4 @@
-name: Build Windows release
+name: Build Windows release # v1.0.1: settings layout and verified model calls
 
 on:
   workflow_dispatch:

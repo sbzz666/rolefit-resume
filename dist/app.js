@@ -193,24 +193,26 @@ function setSettingsResult(message, type="") {
 }
 async function openSettings() {
   const modal=$("#settingsModal"); modal.classList.remove("hidden"); modal.setAttribute("aria-hidden","false");
-  setSettingsResult("可先测试连接并读取可用模型。");
+  setSettingsResult("① 填写 API Key ② 选择或填写模型 ③ 测试调用并保存。测试会发送一条简短请求，产生少量 API 费用。");
   try {
     const config=await desktopApi.getConfig();
     $("#deepseekModel").value=config.model||"deepseek-flash";
-    $("#saveDeepseekKey").checked=config.saveKey;
+    $("#saveDeepseekKey").checked=config.hasKey ? config.saveKey : config.encryptionAvailable;
     $("#deepseekKey").placeholder=config.hasKey?"已配置；留空保持不变":"sk-...";
   } catch(error) { setSettingsResult(error.message,"error"); }
   $("#deepseekKey").focus();
 }
 function closeSettings() { const modal=$("#settingsModal"); modal.classList.add("hidden"); modal.setAttribute("aria-hidden","true"); $("#deepseekKey").value=""; }
 async function testDeepseek() {
-  setSettingsResult("正在连接 DeepSeek…");
+  $("#testDeepseek").disabled=true;
+  setSettingsResult("正在验证 Key 并实际调用所选模型，请稍候…");
   try {
-    const data=await desktopApi.testConnection({key:$("#deepseekKey").value.trim()});
+    const data=await desktopApi.testConnection({key:$("#deepseekKey").value.trim(),model:$("#deepseekModel").value.trim()});
     $("#modelOptions").innerHTML=data.models.map(x=>`<option value="${escapeHtml(x.id)}">${escapeHtml(x.name)}</option>`).join("");
     if(!$("#deepseekModel").value&&data.models[0]) $("#deepseekModel").value=data.models[0].id;
-    setSettingsResult(`连接成功，读取到 ${data.models.length} 个模型。`,"success");
+    setSettingsResult(`验证成功：${data.model} 已实际返回回复；读取到 ${data.models.length} 个可用模型。请点击「保存设置」后开始生成。`,"success");
   } catch(error) { setSettingsResult(error.message||"连接失败","error"); }
+  finally { $("#testDeepseek").disabled=false; }
 }
 async function saveDeepseek() {
   setSettingsResult("正在保存…");
