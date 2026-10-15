@@ -1,0 +1,41 @@
+name: Build Windows release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run dist:win
+      - name: Package installer and checksum
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem release/RoleFit-Setup-*.exe | Select-Object -First 1
+          $hash = (Get-FileHash $setup.FullName -Algorithm SHA256).Hash.ToLower()
+          "$hash  $($setup.Name)" | Set-Content release/SHA256SUMS.txt -Encoding ascii
+          Copy-Item README.md release/README.md
+          Compress-Archive -Path $setup.FullName,release/README.md,release/SHA256SUMS.txt -DestinationPath "release/RoleFit-Windows-${{ github.ref_name }}.zip"
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            release/RoleFit-Windows-${{ github.ref_name }}.zip
+            release/RoleFit-Setup-*.exe
+            release/SHA256SUMS.txt
+

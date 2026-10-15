@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="根据公司、职位与 JD 快速生成岗位贴合的中文简历草稿。" />
+  <title>RoleFit · 岗位定制简历</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./resume-tech.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="RoleFit 首页"><span class="brand-mark">R</span><span>RoleFit</span></a>
+    <div class="top-actions">
+      <span class="autosave" id="aiStatus"><i></i> 正在检查 DeepSeek</span>
+      <button class="button ghost desktop-only hidden" id="settingsBtn" type="button">DeepSeek 设置</button>
+      <button class="button ghost" id="resetBtn" type="button">清空</button>
+    </div>
+  </header>
+
+  <main id="top" class="workspace">
+    <section class="intro">
+      <p class="eyebrow">JOB-SPECIFIC RESUME BUILDER</p>
+      <h1>不是换个职位名，<br><em>而是让整份简历对准岗位。</em></h1>
+      <p>粘贴职位 JD，自动提取关键词、重写职业摘要，并生成贴近岗位职责的项目草稿。</p>
+    </section>
+
+    <div class="stepper" aria-label="生成流程">
+      <span class="active">01 岗位信息</span><b></b><span>02 候选人信息</span><b></b><span>03 生成与校对</span>
+    </div>
+
+    <section class="app-grid">
+      <form id="resumeForm" class="panel form-panel">
+        <div class="panel-heading"><div><small>INPUT</small><h2>告诉我你要投什么</h2></div><span class="badge">约 2 分钟</span></div>
+
+        <div class="field-row">
+          <label>公司名称<input id="company" name="company" placeholder="例如：字节跳动" autocomplete="organization" /></label>
+          <label>职位名称<input id="role" name="role" placeholder="例如：高级产品经理" /></label>
+        </div>
+        <label>职位描述 JD<textarea id="jd" name="jd" rows="10" placeholder="粘贴完整 JD。职责、能力要求、加分项越完整，匹配越准确。"></textarea></label>
+
+        <details open>
+          <summary>候选人基础信息 <span>用于生成简历抬头和摘要</span></summary>
+          <div class="details-body">
+            <div class="field-row three">
+              <label>姓名<input id="name" name="name" placeholder="你的姓名" /></label>
+              <label>工作年限<input id="years" name="years" placeholder="例如：5 年" /></label>
+              <label>所在城市<input id="city" name="city" placeholder="例如：上海" /></label>
+            </div>
+            <div class="field-row three">
+              <label>性别 / 出生年月<input id="identity" name="identity" placeholder="男｜2002.12" /></label>
+              <label>学校<input id="school" name="school" placeholder="学校名称" /></label>
+              <label>专业 / 学历<input id="education" name="education" placeholder="计算机科学｜本科" /></label>
+            </div>
+            <div class="field-row">
+              <label>邮箱<input id="email" name="email" type="email" placeholder="name@example.com" /></label>
+              <label>电话<input id="phone" name="phone" placeholder="138 0000 0000" /></label>
+            </div>
+            <div class="field-row">
+              <label>GitHub / 作品集<input id="portfolio" name="portfolio" placeholder="github.com/username" /></label>
+              <label>求职状态<input id="availability" name="availability" placeholder="可立即到岗 / 可实习 3 个月" /></label>
+            </div>
+            <label>证件照（可选）<input id="photo" name="photo" type="file" accept="image/*" /></label>
+            <label>个人基础（可选）<textarea id="background" name="background" rows="6" placeholder="可填写你的真实经历、掌握的技能或做过的项目；留空时将按 JD 生成明确标注的模拟项目与待确认技能。"></textarea></label>
+          </div>
+        </details>
+
+        <div class="form-footer">
+          <p><span>✓</span> 可自动补全模拟项目；投递前请确认技能，并保留“模拟项目”标注。</p>
+          <button class="button accent" type="submit"><span>生成岗位定制简历</span><strong>↗</strong></button>
+        </div>
+      </form>
+
+      <aside class="panel preview-panel">
+        <div class="preview-toolbar">
+          <div class="preview-title"><small>LIVE PREVIEW</small><h2>简历预览</h2></div>
+          <div class="preview-operations">
+            <div class="preview-actions"><button id="editBtn" class="icon-button" type="button"><span>✎</span> 编辑</button><button id="copyBtn" class="icon-button" type="button" title="复制简历"><span>▣</span> 复制</button></div>
+            <div class="export-group" aria-label="导出文件"><span class="export-label">导出文件</span><button id="wordBtn" class="export-button word" type="button"><b>W</b> Word</button><button id="printBtn" class="export-button pdf" type="button"><b>↓</b> PDF</button></div>
+          </div>
+        </div>
+        <div id="emptyState" class="empty-state">
+          <div class="document-ghost"><span></span><span></span><span></span><span></span></div>
+          <h3>你的定制简历会出现在这里</h3>
+          <p>先填写公司、职位和 JD。我们会标出关键词覆盖情况，方便你继续校对。</p>
+          <div class="tip"><b>说明</b> 未提供经历时会自动生成岗位模拟项目，适合作品集或能力证明，不会冒充真实任职经历。</div>
+        </div>
+        <article id="resumePreview" class="resume hidden" aria-live="polite"></article>
+      </aside>
+    </section>
+  </main>
+  <div id="settingsModal" class="confirm-modal hidden" aria-hidden="true">
+    <div class="confirm-dialog settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="settings-heading">
+        <div><span class="confirm-eyebrow">DESKTOP SETTINGS</span><h3 id="settingsTitle">DeepSeek 设置</h3></div>
+        <button id="settingsClose" class="settings-close" type="button" aria-label="关闭">×</button>
+      </div>
+      <p class="settings-note">Key 只在这台电脑上使用，不会上传到 RoleFit 服务器。留空可保留当前 Key。</p>
+      <label class="settings-field">API Key
+        <div class="secret-input"><input id="deepseekKey" type="password" autocomplete="off" placeholder="sk-..." /><button id="toggleKey" type="button">显示</button></div>
+      </label>
+      <label class="settings-check"><input id="saveDeepseekKey" type="checkbox" checked /> 使用 Windows 加密并保存在本机</label>
+      <label class="settings-field">模型
+        <input id="deepseekModel" list="modelOptions" placeholder="deepseek-flash" />
+        <datalist id="modelOptions"></datalist>
+      </label>
+      <div id="settingsResult" class="settings-result">可先测试连接并读取可用模型。</div>
+      <div class="confirm-actions settings-actions">
+        <button id="testDeepseek" class="confirm-button secondary" type="button">测试连接</button>
+        <button id="saveDeepseek" class="confirm-button primary" type="button">保存设置</button>
+      </div>
+    </div>
+  </div>
+  <div id="exportConfirmModal" class="confirm-modal hidden" aria-hidden="true">
+    <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmDescription">
+      <div id="confirmIcon" class="confirm-icon">↓</div>
+      <div class="confirm-copy">
+        <span class="confirm-eyebrow">EXPORT CHECK</span>
+        <h3 id="confirmTitle">确认导出简历？</h3>
+        <p id="confirmDescription">确认后将生成 A4 文件并开始下载。</p>
+        <div class="confirm-file"><span>文件名</span><strong id="confirmFileName"></strong></div>
+      </div>
+      <div class="confirm-actions">
+        <button id="confirmCancel" class="confirm-button secondary" type="button">取消</button>
+        <button id="confirmExport" class="confirm-button primary" type="button">确认导出</button>
+      </div>
+    </div>
+  </div>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="./vendor/html2pdf.bundle.min.js"></script>
+  <script src="./vendor/docx.iife.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
+

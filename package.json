@@ -1,0 +1,53 @@
+{
+  "name": "rolefit-resume",
+  "version": "1.0.0",
+  "description": "本地优先的岗位定制简历生成器",
+  "author": {
+    "name": "夏世康",
+    "email": "2932073285@qq.com"
+  },
+  "license": "MIT",
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "check": "node scripts/check.mjs",
+    "desktop": "electron .",
+    "dist:win": "electron-builder --win nsis"
+  },
+  "dependencies": {
+    "docx": "^9.10.0",
+    "html2pdf.js": "^0.14.0"
+  },
+  "devDependencies": {
+    "electron": "^38.2.2",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.xiashikang.rolefit",
+    "productName": "RoleFit",
+    "asar": true,
+    "electronDist": "node_modules/electron/dist",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "desktop/**/*",
+      "dist/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": ["nsis"],
+      "artifactName": "RoleFit-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "RoleFit",
+      "installerLanguages": ["zh_CN"],
+      "language": "2052"
+    }
+  }
+}
+
