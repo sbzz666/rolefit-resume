@@ -22,7 +22,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
-      - run: npm run dist:win
+      - run: npm run dist:win -- --publish never
       - name: Read release version
         id: version
         shell: pwsh
